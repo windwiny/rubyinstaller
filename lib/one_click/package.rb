@@ -1,12 +1,21 @@
 module OneClick
   class Package
+    autoload :Actions, 'one_click/package/actions'
+
     attr_accessor :name
     attr_accessor :version
+    attr_accessor :actions
 
     def initialize(name = nil, version = nil, &block)
       @name = name
       @version = version
-      define if block_given?
+
+      if block_given? then
+        @actions = Actions.new
+        @actions.instance_eval(&block)
+
+        define
+      end
     end
 
     def define

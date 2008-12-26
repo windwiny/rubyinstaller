@@ -36,4 +36,34 @@ describe OneClick::Package do
       pkg.version.should == '1.2.3'
     end
   end
+
+  describe '#actions' do
+    before :each do
+      @mock_actions = mock(OneClick::Package::Actions)
+      OneClick::Package::Actions.stub!(:new).and_return(@mock_actions)
+      @a_block = proc { }
+    end
+
+    it 'should create an actions instance if a block was provided' do
+      OneClick::Package::Actions.should_receive(:new)
+      OneClick::Package.new('foo', '1.2.3') { }
+    end
+
+    it 'should delegate block to actions instance' do
+      @mock_actions.should_receive(:instance_eval).with(&@a_block)
+      OneClick::Package.new('foo', '1.2.3', &@a_block)
+    end
+
+    it 'should not create actions instance if no block was provided' do
+      OneClick::Package::Actions.should_not_receive(:new)
+      OneClick::Package.new('foo', '1.2.3')
+    end
+
+    it 'should allow package actions be replaced later' do
+      pkg = OneClick::Package.new('foo', '1.2.3')
+      pkg.actions.should be_nil
+      pkg.actions = @mock_actions
+      pkg.actions.should == @mock_actions
+    end
+  end
 end
