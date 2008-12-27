@@ -10,8 +10,9 @@ module OneClick
       @name = name
       @version = version
 
+      @actions = Actions.new
+
       if block_given? then
-        @actions = Actions.new
         @actions.instance_eval(&block)
 
         define

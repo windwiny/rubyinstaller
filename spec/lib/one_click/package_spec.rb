@@ -54,16 +54,16 @@ describe OneClick::Package do
       OneClick::Package.new('foo', '1.2.3', &@a_block)
     end
 
-    it 'should not create actions instance if no block was provided' do
-      OneClick::Package::Actions.should_not_receive(:new)
-      OneClick::Package.new('foo', '1.2.3')
+    it 'should create a default actions instance if no block was provided' do
+      OneClick::Package::Actions.should_receive(:new).and_return(@mock_actions)
+      pkg = OneClick::Package.new('foo', '1.2.3')
+      pkg.actions.should == @mock_actions
     end
 
     it 'should allow package actions be replaced later' do
       pkg = OneClick::Package.new('foo', '1.2.3')
+      pkg.actions = nil
       pkg.actions.should be_nil
-      pkg.actions = @mock_actions
-      pkg.actions.should == @mock_actions
     end
   end
 end
