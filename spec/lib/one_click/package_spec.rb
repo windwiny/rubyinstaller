@@ -41,7 +41,6 @@ describe OneClick::Package do
     before :each do
       @mock_actions = mock(OneClick::Package::Actions)
       OneClick::Package::Actions.stub!(:new).and_return(@mock_actions)
-      @a_block = proc { }
     end
 
     it 'should create an actions instance if a block was provided' do
@@ -50,8 +49,9 @@ describe OneClick::Package do
     end
 
     it 'should delegate block to actions instance' do
-      @mock_actions.should_receive(:instance_eval).with(&@a_block)
-      OneClick::Package.new('foo', '1.2.3', &@a_block)
+      a_block = proc { }
+      @mock_actions.should_receive(:instance_eval).with(&a_block)
+      OneClick::Package.new('foo', '1.2.3', &a_block)
     end
 
     it 'should create a default actions instance if no block was provided' do
