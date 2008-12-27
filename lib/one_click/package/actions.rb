@@ -7,6 +7,7 @@ module OneClick
 
       def initialize
         @downloads = []
+        @tools = []
       end
 
       def download(url)
@@ -16,6 +17,14 @@ module OneClick
 
       def has_downloads?
         @downloads.size > 0
+      end
+
+      def uses(tool)
+        @tools << tool unless uses?(tool)
+      end
+
+      def uses?(tool)
+        @tools.include?(tool)
       end
     end
   end
