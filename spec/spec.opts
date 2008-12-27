@@ -1,3 +1,4 @@
 --colour
+--diff unified
 --format nested
 --loadby mtime
