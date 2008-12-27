@@ -42,4 +42,32 @@ describe OneClick::Package::Actions do
       @it.should use(:configure)
     end
   end
+
+  describe '#depends_on' do
+    before :each do
+      @it.depends_on 'something'
+    end
+
+    it 'should have dependencies' do
+      @it.should have_dependencies
+    end
+
+    it 'should store dependency package name' do
+      @it.dependencies.first[:package].should == 'something'
+    end
+
+    describe '(versioned)'do
+      before :each do
+        @it.depends_on 'versioned-package', :version => '1.2.3'
+      end
+
+      it 'should store depedency package name' do
+        @it.dependencies.last[:package].should == 'versioned-package'
+      end
+
+      it 'should store version of depedency package' do
+        @it.dependencies.last[:version].should == '1.2.3'
+      end
+    end
+  end
 end
