@@ -83,6 +83,22 @@ describe OneClick::Package do
     end
   end
 
+  describe '#source_dir' do
+    before :each do
+      @pkg = OneClick::Package.new('foo', '1.2.3')
+    end
+
+    it 'should use pkg_dir as reference' do
+      @pkg.should_receive(:pkg_dir).and_return('sandboxed/foo/1.2.3')
+      @pkg.source_dir
+    end
+
+    it 'should define a folder inside the structure' do
+      @pkg.stub!(:pkg_dir).and_return('tmp/foo/1.2.3')
+      @pkg.source_dir.should == 'tmp/foo/1.2.3/source'
+    end
+  end
+
   describe "#define" do
     predicate_matchers[:have_defined] = :task_defined?
 

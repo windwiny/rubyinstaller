@@ -23,6 +23,10 @@ module OneClick
       @pkg_dir ||= File.join(OneClick.sandbox_dir, @name, @version)
     end
 
+    def source_dir
+      @source_dir ||= File.join(pkg_dir, 'source')
+    end
+
     def define
       fail 'package name is required' if @name.nil?
       fail 'package version is required' if @version.nil?
