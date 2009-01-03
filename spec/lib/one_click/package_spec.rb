@@ -130,7 +130,7 @@ describe OneClick::Package do
         Rake::Task.should_not have_defined('foo:4.5.6:download')
       end
 
-      it 'should define the package download task' do
+      it 'should use download references to define download task' do
         @mock_actions.should_receive(:has_downloads?).and_return(true)
         @mock_actions.should_receive(:downloads).and_return(@files)
         @pkg.define_download
@@ -146,6 +146,26 @@ describe OneClick::Package do
       it 'should make the file tasks part of the download one' do
         @pkg.define_download
         Rake::Task['foo:4.5.6:download'].prerequisites.should include('tmp/foo/4.5.6/foo-4.5.6.zip')
+      end
+
+      it 'should make multiple file tasks part of the download one' do
+        @files << {:file => 'foo-ext-1.2.3.zip', :url => 'http://www.bar.com/foo-ext-1.2.3.zip'}
+        @pkg.define_download
+        Rake::Task['foo:4.5.6:download'].prerequisites.should include('tmp/foo/4.5.6/foo-ext-1.2.3.zip')
+      end
+    end
+
+    describe '#define_extract' do
+      before :each do
+        @files = [{:file => 'foo-4.5.6.zip', :url => 'http://www.domain.com/foo-4.5.6.zip'}]
+        @mock_actions.stub!(:has_downloads?).and_return(true)
+        @mock_actions.stub!(:downloads).and_return(@files)
+      end
+
+      it 'should not define a task if no downloads are defined' do
+        @mock_actions.should_receive(:has_downloads?).and_return(false)
+        @pkg.define_extract
+        Rake::Task.should_not have_defined('foo:4.5.6:extract')
       end
     end
   end

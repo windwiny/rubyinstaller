@@ -47,5 +47,9 @@ module OneClick
         Rake::Task.define_task("#{@name}:#{@version}:download" => ["#{pkg_dir}/#{download[:file]}"])
       end
     end
+
+    def define_extract
+      return unless @actions.has_downloads?
+    end
   end
 end
