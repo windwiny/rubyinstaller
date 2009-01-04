@@ -163,7 +163,7 @@ describe OneClick::Package do
         @mock_actions.stub!(:downloads).and_return(@files)
 
         Digest::SHA1.stub!(:hexdigest).and_return('generated-hex-digest')
-        @checkpoint_file = 'tmp/foo/4.5.6/.checkpoint-extract-generated-hex-digest'
+        @checkpoint_file = 'tmp/foo/4.5.6/.checkpoint--extract--generated-hex-digest'
       end
 
       it 'should not define a task if no downloads are defined' do

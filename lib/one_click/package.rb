@@ -57,7 +57,7 @@ module OneClick
       files = @actions.downloads.collect { |download| "#{pkg_dir}/#{download[:file]}" }.join("\n")
       sha1_files = Digest::SHA1.hexdigest(files)
 
-      extract_checkpoint = "#{pkg_dir}/.checkpoint-extract-#{sha1_files}"
+      extract_checkpoint = "#{pkg_dir}/.checkpoint--extract--#{sha1_files}"
 
       # TODO: define extraction actions
       Rake::Task.define_task(extract_checkpoint)
