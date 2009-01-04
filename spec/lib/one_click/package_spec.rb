@@ -39,7 +39,7 @@ describe OneClick::Package do
 
   describe '#actions' do
     before :each do
-      @mock_actions = mock(OneClick::Package::Actions)
+      @mock_actions = mock(OneClick::Package::Actions, :has_downloads? => false)
       OneClick::Package::Actions.stub!(:new).and_return(@mock_actions)
     end
 
@@ -103,8 +103,9 @@ describe OneClick::Package do
     before :each do
       Rake.application.clear
 
-      @mock_actions = mock(OneClick::Package::Actions)
+      @mock_actions = mock(OneClick::Package::Actions, :has_downloads? => false)
       OneClick::Package::Actions.stub!(:new).and_return(@mock_actions)
+
       @pkg = OneClick::Package.new('foo', '4.5.6')
     end
 
@@ -113,6 +114,40 @@ describe OneClick::Package do
         Rake::Task.should_not have_defined('foo:4.5.6')
         @pkg.define
         Rake::Task.should have_defined('foo:4.5.6')
+      end
+
+      it 'should invoke download task definition' do
+        @pkg.should_receive(:define_download)
+        @pkg.define
+      end
+
+      it 'should not depend on download task without downloads' do
+        @pkg.stub!(:define_download).and_return(false)
+        @pkg.define
+        Rake::Task['foo:4.5.6'].prerequisites.should_not include('foo:4.5.6:download')
+      end
+
+      it 'should chain dependency when there are downloads' do
+        @pkg.stub!(:define_download).and_return(true)
+        @pkg.define
+        Rake::Task['foo:4.5.6'].prerequisites.should include('foo:4.5.6:download')
+      end
+
+      it 'should invoke extraction task definition' do
+        @pkg.should_receive(:define_extract)
+        @pkg.define
+      end
+
+      it 'should not depend on extraction task without downloads' do
+        @pkg.stub!(:define_extract).and_return(false)
+        @pkg.define
+        Rake::Task['foo:4.5.6'].prerequisites.should_not include('foo:4.5.6:extract')
+      end
+
+      it 'should chain dependency when there are things to extract' do
+        @pkg.stub!(:define_extract).and_return(true)
+        @pkg.define
+        Rake::Task['foo:4.5.6'].prerequisites.should include('foo:4.5.6:extract')
       end
     end
 

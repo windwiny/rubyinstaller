@@ -33,8 +33,15 @@ module OneClick
       fail 'package name is required' if @name.nil?
       fail 'package version is required' if @version.nil?
 
+      # package:version
       Rake::Task.define_task("#{@name}:#{@version}")
       Rake::Task["#{@name}:#{@version}"].comment = "Build #{@name} version #{@version}"
+
+      # package:version => [package:version:download]
+      Rake::Task["#{@name}:#{@version}"].enhance(["#{@name}:#{@version}:download"]) if define_download
+
+      # package:version => [package:version:extract]
+      Rake::Task["#{@name}:#{@version}"].enhance(["#{@name}:#{@version}:extract"]) if define_extract
     end
 
     def define_download
