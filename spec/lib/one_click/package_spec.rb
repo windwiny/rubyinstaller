@@ -121,6 +121,9 @@ describe OneClick::Package do
         @files = [{:file => 'foo-4.5.6.zip', :url => 'http://www.domain.com/foo-4.5.6.zip'}]
         @mock_actions.stub!(:has_downloads?).and_return(true)
         @mock_actions.stub!(:downloads).and_return(@files)
+
+        Digest::SHA1.stub!(:hexdigest).and_return('generated-hex-digest')
+        @checkpoint_file = 'tmp/foo/4.5.6/.checkpoint--download--generated-hex-digest'
       end
 
       it 'should not define task if package has no downloads' do
@@ -142,15 +145,20 @@ describe OneClick::Package do
         Rake::Task.should have_defined('tmp/foo/4.5.6/foo-4.5.6.zip')
       end
 
-      it 'should make the file tasks part of the download one' do
+      it 'should define a checkpoint file for download task' do
+        Digest::SHA1.should_receive(:hexdigest).and_return('generated-hex-digest')
         @pkg.define_download
-        Rake::Task['foo:4.5.6:download'].prerequisites.should include('tmp/foo/4.5.6/foo-4.5.6.zip')
+        Rake::Task.should have_defined(@checkpoint_file)
       end
 
-      it 'should make multiple file tasks part of the download one' do
-        @files << {:file => 'foo-ext-1.2.3.zip', :url => 'http://www.bar.com/foo-ext-1.2.3.zip'}
+      it 'should make the checkpoint task dependent on file ones' do
         @pkg.define_download
-        Rake::Task['foo:4.5.6:download'].prerequisites.should include('tmp/foo/4.5.6/foo-ext-1.2.3.zip')
+        Rake::Task[@checkpoint_file].prerequisites.should include('tmp/foo/4.5.6/foo-4.5.6.zip')
+      end
+
+      it 'should make checkpoint task part of the download one' do
+        @pkg.define_download
+        Rake::Task['foo:4.5.6:download'].prerequisites.should include(@checkpoint_file)
       end
     end
 
