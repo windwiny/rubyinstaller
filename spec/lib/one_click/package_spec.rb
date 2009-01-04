@@ -100,8 +100,6 @@ describe OneClick::Package do
   end
 
   describe "#define" do
-    predicate_matchers[:have_defined] = :task_defined?
-
     before :each do
       Rake.application.clear
 

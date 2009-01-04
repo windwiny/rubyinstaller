@@ -8,4 +8,5 @@ require 'spec'
 require 'one_click'
 
 Spec::Runner.configure do |config|
+  config.predicate_matchers[:have_defined] = :task_defined?
 end
