@@ -34,7 +34,7 @@ module OneClick
       fail 'package version is required' if @version.nil?
 
       Rake::Task.define_task("#{@name}:#{@version}")
-      Rake::Task["#{@name}:#{@version}"].comment = "Build version #{@version} of #{@name}"
+      Rake::Task["#{@name}:#{@version}"].comment = "Build #{@name} version #{@version}"
     end
 
     def define_download
