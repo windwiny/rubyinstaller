@@ -99,7 +99,7 @@ describe OneClick::Package do
     end
   end
 
-  describe "#define" do
+  describe '(defining tasks)' do
     before :each do
       Rake.application.clear
 
@@ -108,10 +108,12 @@ describe OneClick::Package do
       @pkg = OneClick::Package.new('foo', '4.5.6')
     end
 
-    it 'should define a task for the package version' do
-      Rake::Task.should_not have_defined('foo:4.5.6')
-      @pkg.define
-      Rake::Task.should have_defined('foo:4.5.6')
+    describe "#define" do
+      it 'should define a task for the package version' do
+        Rake::Task.should_not have_defined('foo:4.5.6')
+        @pkg.define
+        Rake::Task.should have_defined('foo:4.5.6')
+      end
     end
 
     describe "#define_download" do
