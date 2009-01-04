@@ -118,8 +118,9 @@ describe OneClick::Package do
 
     describe "#define_download" do
       before :each do
-        @files = [{:file => 'foo-4.5.6.zip', :url => 'http://www.domain.com/foo-4.5.6.zip'}]
         OneClick.stub!(:sandbox_dir).and_return('tmp')
+
+        @files = [{:file => 'foo-4.5.6.zip', :url => 'http://www.domain.com/foo-4.5.6.zip'}]
         @mock_actions.stub!(:has_downloads?).and_return(true)
         @mock_actions.stub!(:downloads).and_return(@files)
       end
@@ -157,15 +158,53 @@ describe OneClick::Package do
 
     describe '#define_extract' do
       before :each do
-        @files = [{:file => 'foo-4.5.6.zip', :url => 'http://www.domain.com/foo-4.5.6.zip'}]
+        OneClick.stub!(:sandbox_dir).and_return('tmp')
+
+        @files = [{:file => 'foo-4.5.6.zip'}]
         @mock_actions.stub!(:has_downloads?).and_return(true)
         @mock_actions.stub!(:downloads).and_return(@files)
+
+        Digest::SHA1.stub!(:hexdigest).and_return('generated-hex-digest')
+        @checkpoint_file = 'tmp/foo/4.5.6/.checkpoint-extract-generated-hex-digest'
       end
 
       it 'should not define a task if no downloads are defined' do
         @mock_actions.should_receive(:has_downloads?).and_return(false)
         @pkg.define_extract
         Rake::Task.should_not have_defined('foo:4.5.6:extract')
+      end
+
+      it 'should define a task when package contains download intructions' do
+        @mock_actions.should_receive(:has_downloads?).and_return(true)
+        @pkg.define_extract
+        Rake::Task.should have_defined('foo:4.5.6:extract')
+      end
+
+      it 'should generate a SHA1 digest using the single file signature' do
+        Digest::SHA1.should_receive(:hexdigest).with("tmp/foo/4.5.6/foo-4.5.6.zip")
+        @pkg.define_extract
+      end
+
+      it 'should generate a SHA1 digest using multiple file signatures' do
+        @files << {:file => 'foo-ext-1.2.3.zip'}
+        Digest::SHA1.should_receive(:hexdigest).with("tmp/foo/4.5.6/foo-4.5.6.zip\ntmp/foo/4.5.6/foo-ext-1.2.3.zip")
+        @pkg.define_extract
+      end
+
+      it 'should define a checkpoint file for extraction task' do
+        Digest::SHA1.should_receive(:hexdigest).and_return('generated-hex-digest')
+        @pkg.define_extract
+        Rake::Task.should have_defined(@checkpoint_file)
+      end
+
+      it 'should make the checkpoint task dependent on file ones' do
+        @pkg.define_extract
+        Rake::Task[@checkpoint_file].prerequisites.should include('tmp/foo/4.5.6/foo-4.5.6.zip')
+      end
+
+      it 'should make checkpoint task part of the extraction one' do
+        @pkg.define_extract
+        Rake::Task['foo:4.5.6:extract'].prerequisites.should include(@checkpoint_file)
       end
     end
   end

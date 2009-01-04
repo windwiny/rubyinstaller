@@ -1,3 +1,5 @@
+require 'digest/sha1'
+
 module OneClick
   class Package
     autoload :Actions, 'one_click/package/actions'
@@ -39,9 +41,10 @@ module OneClick
       return unless @actions.has_downloads?
 
       @actions.downloads.each do |download|
-        Rake::FileTask.define_task("#{pkg_dir}/#{download[:file]}") do |t|
-          OneClick::Utils.download(download[:url], pkg_dir)
-        end
+        # TODO: spec file task for coverage
+        Rake::FileTask.define_task("#{pkg_dir}/#{download[:file]}") #do |t|
+        #  OneClick::Utils.download(download[:url], pkg_dir)
+        #end
 
         # package:version:download => [sandbox/package/version/file]
         Rake::Task.define_task("#{@name}:#{@version}:download" => ["#{pkg_dir}/#{download[:file]}"])
@@ -50,6 +53,21 @@ module OneClick
 
     def define_extract
       return unless @actions.has_downloads?
+
+      files = @actions.downloads.collect { |download| "#{pkg_dir}/#{download[:file]}" }.join("\n")
+      sha1_files = Digest::SHA1.hexdigest(files)
+
+      extract_checkpoint = "#{pkg_dir}/.checkpoint-extract-#{sha1_files}"
+
+      # TODO: define extraction actions
+      Rake::Task.define_task(extract_checkpoint)
+
+      @actions.downloads.each do |download|
+        Rake::Task[extract_checkpoint].enhance(["#{pkg_dir}/#{download[:file]}"])
+      end
+
+      # package:version:extract => [sandbox/package/version/extract_checkpoint]
+      Rake::Task.define_task("#{@name}:#{@version}:extract" => [extract_checkpoint])
     end
   end
 end
