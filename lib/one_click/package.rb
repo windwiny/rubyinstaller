@@ -37,11 +37,15 @@ module OneClick
       Rake::Task.define_task("#{@name}:#{@version}")
       Rake::Task["#{@name}:#{@version}"].comment = "Build #{@name} version #{@version}"
 
-      # package:version => [package:version:download]
-      Rake::Task["#{@name}:#{@version}"].enhance(["#{@name}:#{@version}:download"]) if define_download
+      chained_actions = []
+      chained_actions << :download if define_download
+      chained_actions << :extract if define_extract
 
-      # package:version => [package:version:extract]
-      Rake::Task["#{@name}:#{@version}"].enhance(["#{@name}:#{@version}:extract"]) if define_extract
+      # prepend package:version to the list of actions
+      chained_actions.map! { |action| "#{@name}:#{@version}:#{action}" }
+
+      # package:version => [package:version:...]
+      Rake::Task["#{@name}:#{@version}"].enhance(chained_actions)
     end
 
     def define_download
