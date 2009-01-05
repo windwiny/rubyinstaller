@@ -1,6 +1,4 @@
 begin
-  gem 'rspec', '~> 1.1.11'
-  gem 'rcov', '~> 0.8.1'
   require 'spec/rake/spectask'
   require 'rcov'
 rescue Exception
