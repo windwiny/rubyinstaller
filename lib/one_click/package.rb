@@ -52,7 +52,7 @@ module OneClick
       return unless @actions.has_downloads?
 
       # TODO: define download actions for checkpoint
-      Rake::FileTask.define_task(download_checkpoint)
+      task = Rake::FileTask.define_task(download_checkpoint)
 
       @actions.downloads.each do |download|
         # TODO: spec file task for coverage
@@ -61,25 +61,25 @@ module OneClick
         #end
 
         # sandbox/package/version/download_checkpoint => [sandbox/package/version/file]
-        Rake::Task[download_checkpoint].enhance(["#{pkg_dir}/#{download[:file]}"])
+        task.enhance(["#{pkg_dir}/#{download[:file]}"])
       end
 
-      Rake::Task.define_task("#{@name}:#{@version}:download" => [download_checkpoint])
+      Rake::Task.define_task("#{@name}:#{@version}:download" => [task])
     end
 
     def define_extract
       return unless @actions.has_downloads?
 
       # TODO: define extraction actions for checkpoint
-      Rake::FileTask.define_task(extract_checkpoint)
+      task = Rake::FileTask.define_task(extract_checkpoint)
 
       @actions.downloads.each do |download|
         # sandbox/package/version/extract_checkpoint => [sandbox/package/version/file]
-        Rake::Task[extract_checkpoint].enhance(["#{pkg_dir}/#{download[:file]}"])
+        task.enhance(["#{pkg_dir}/#{download[:file]}"])
       end
 
       # package:version:extract => [sandbox/package/version/extract_checkpoint]
-      Rake::Task.define_task("#{@name}:#{@version}:extract" => [extract_checkpoint])
+      Rake::Task.define_task("#{@name}:#{@version}:extract" => [task])
     end
 
     private
