@@ -104,6 +104,8 @@ describe OneClick::Package do
       Rake.application.clear
 
       @mock_actions = mock(OneClick::Package::Actions, :has_downloads? => false)
+      @mock_actions.stub!(:before_parts => nil)
+
       OneClick::Package::Actions.stub!(:new).and_return(@mock_actions)
 
       @pkg = OneClick::Package.new('foo', '4.5.6')
@@ -182,7 +184,7 @@ describe OneClick::Package do
         Rake::Task.should have_defined('tmp/foo/4.5.6/foo-4.5.6.zip')
       end
 
-      it 'should define a checkpoint file for download task' do
+      it 'should compute SHA1 digest used in checkpoint file' do
         Digest::SHA1.should_receive(:hexdigest).and_return('generated-hex-digest')
         @pkg.define_download
         Rake::Task.should have_defined(@checkpoint_file)
@@ -196,6 +198,44 @@ describe OneClick::Package do
       it 'should make checkpoint task part of the download one' do
         @pkg.define_download
         Rake::Task['foo:4.5.6:download'].prerequisites.should include(@checkpoint_file)
+      end
+
+      describe '(before actions)' do
+        before :each do
+          @before_block = Proc.new { }
+          @mock_actions.stub!(:before_parts).and_return([@before_blocks])
+
+          @before_checkpoint_file = 'tmp/foo/4.5.6/.checkpoint--before-download--generated-hex-digest'
+        end
+
+        it 'should not define before download checkpoint when no parts exists' do
+          @mock_actions.should_receive(:before_parts).with(:download).and_return(nil)
+          @pkg.define_download
+          Rake::Task.should_not have_defined(@before_checkpoint_file)
+        end
+
+        it 'should define a before download checkpoint task' do
+          @mock_actions.should_receive(:before_parts).with(:download).and_return([@before_blocks])
+          @pkg.define_download
+          Rake::Task.should have_defined(@before_checkpoint_file)
+        end
+
+        it 'should compute a SHA1 digest for the actions' do
+          Digest::SHA1.should_receive(:hexdigest).with("foo\n4.5.6\nbefore-download\n1")
+          @pkg.define_download
+        end
+
+        it 'should compute a different SHA1 digest for multiple actions' do
+          @mock_actions.stub!(:before_parts).and_return([@before_block, @before_block])
+          Digest::SHA1.should_receive(:hexdigest).with("foo\n4.5.6\nbefore-download\n2")
+          @pkg.define_download
+        end
+
+        it 'should make before actions checkpoint part of the download task' do
+          @pkg.define_download
+          Rake::Task['foo:4.5.6:download'].prerequisites.should include(@before_checkpoint_file)
+          puts Rake.application.tasks
+        end
       end
     end
 

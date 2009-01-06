@@ -24,4 +24,24 @@ describe OneClick::Package::Actions do
       @it.should have(2).downloads
     end
   end
+
+  describe '#before' do
+    it 'should collect before parts for action' do
+      @it.before_parts(:download).should be_nil
+      @it.before(:download) { }
+      @it.before_parts(:download).should_not be_nil
+    end
+
+    it 'should allow collection of parts for different actions' do
+      @it.before(:download) { }
+      @it.before(:extract) { }
+      @it.should have(1).before_parts(:download)
+      @it.should have(1).before_parts(:extract)
+    end
+
+    it 'should allow collection of multiple parts for same action' do
+      2.times { @it.before(:download) { } }
+      @it.should have(2).before_parts(:download)
+    end
+  end
 end
