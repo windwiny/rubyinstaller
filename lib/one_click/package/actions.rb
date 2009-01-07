@@ -8,6 +8,7 @@ module OneClick
       def initialize
         @downloads = []
         @before_parts = {}
+        @after_parts = {}
       end
 
       def download(url)
@@ -23,8 +24,16 @@ module OneClick
         (@before_parts[action] ||= []) << block
       end
 
+      def after(action, &block)
+        (@after_parts[action] ||= []) << block
+      end
+
       def before_parts(action)
         @before_parts[action]
+      end
+
+      def after_parts(action)
+        @after_parts[action]
       end
     end
   end

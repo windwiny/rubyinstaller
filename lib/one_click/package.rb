@@ -55,11 +55,7 @@ module OneClick
       tasks = []
 
       # sandbox/package/version/before-download_checkpoint
-      if @actions.before_parts(:download) then
-        sha1 = Digest::SHA1.hexdigest([@name, @version, 'before-download', @actions.before_parts(:download).size].join("\n"))
-        before_download_checkpoint = "#{pkg_dir}/.checkpoint--before-download--#{sha1}"
-        tasks << Rake::FileTask.define_task(before_download_checkpoint)
-      end
+      tasks << action_checkpoint(:before, :download)
 
       # TODO: define download actions for checkpoint
       tasks << Rake::FileTask.define_task(download_checkpoint)
@@ -74,7 +70,10 @@ module OneClick
         tasks.last.enhance(["#{pkg_dir}/#{download[:file]}"])
       end
 
-      Rake::Task.define_task("#{@name}:#{@version}:download" => tasks)
+      # sandbox/package/version/after-download_checkpoint
+      tasks << action_checkpoint(:after, :download)
+
+      Rake::Task.define_task("#{@name}:#{@version}:download" => tasks.compact)
     end
 
     def define_extract
@@ -101,12 +100,31 @@ module OneClick
       end
     end
 
+    def action_checkpoint(before_or_after, action)
+      actions = before_or_after == :before ?
+         @actions.before_parts(action) : @actions.after_parts(action)
+
+      # no actions? nothing for you then!
+      return unless actions
+
+      # sha generate based on project, version, action and number of given parts
+      sha1 = Digest::SHA1.hexdigest([@name, @version, "#{before_or_after}-#{action}", actions.size].join("\n"))
+
+      # sandbox/package/version/before_or_after_checkpoint
+      # TODO: add execution and coverage for parts (blocks)
+      Rake::FileTask.define_task(checkpoint_file("#{before_or_after}-#{action}", sha1))
+    end
+
     def download_checkpoint
-      @download_checkpoint ||= "#{pkg_dir}/.checkpoint--download--#{sha1_files}"
+      @download_checkpoint ||= checkpoint_file(:download, sha1_files)
     end
 
     def extract_checkpoint
-      @extract_checkpoint ||= "#{pkg_dir}/.checkpoint--extract--#{sha1_files}"
+      @extract_checkpoint ||= checkpoint_file(:extract, sha1_files)
+    end
+
+    def checkpoint_file(action, signature)
+      "#{pkg_dir}/.checkpoint--#{action}--#{signature}"
     end
   end
 end
