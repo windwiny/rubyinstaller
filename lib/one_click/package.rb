@@ -101,18 +101,34 @@ module OneClick
     end
 
     def action_checkpoint(before_or_after, action)
-      actions = before_or_after == :before ?
-         @actions.before_parts(action) : @actions.after_parts(action)
+      if before_or_after == :before then
+        actions, persistent_actions = @actions.before_parts(action), @actions.persisted_before_parts(action)
+      elsif :after
+        actions, persistent_actions = @actions.after_parts(action), @actions.persisted_after_parts(action)
+      end
 
       # no actions? nothing for you then!
-      return unless actions
+      return unless actions || persistent_actions
 
-      # sha generate based on project, version, action and number of given parts
-      sha1 = Digest::SHA1.hexdigest([@name, @version, "#{before_or_after}-#{action}", actions.size].join("\n"))
+      # package:version:before_or_after-action
+      task = Rake::Task.define_task("#{@name}:#{@version}:#{before_or_after}-#{action}")
 
-      # sandbox/package/version/before_or_after_checkpoint
-      # TODO: add execution and coverage for parts (blocks)
-      Rake::FileTask.define_task(checkpoint_file("#{before_or_after}-#{action}", sha1))
+      # define action checkpoint for persistent tasks
+      if persistent_actions then
+        # sha generate based on project, version, action and number of given parts
+        sha1 = Digest::SHA1.hexdigest([@name, @version, "#{before_or_after}-#{action}", persistent_actions.size].join("\n"))
+
+        # sandbox/package/version/before_or_after_checkpoint
+        # TODO: add execution and coverage for parts (blocks)
+        checkpoint = Rake::FileTask.define_task(checkpoint_file("#{before_or_after}-#{action}", sha1))
+
+        # chain the checkpoint to the action task
+        # package:version:before_or_after-action => [sandbox/package/version/before_or_after-action-checkpoint]
+        task.enhance([checkpoint.name])
+      end
+
+      # return the defined task name
+      task.name
     end
 
     def download_checkpoint

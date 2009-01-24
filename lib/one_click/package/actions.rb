@@ -9,6 +9,8 @@ module OneClick
         @downloads = []
         @before_parts = {}
         @after_parts = {}
+        @persisted_before_parts = {}
+        @persisted_after_parts = {}
       end
 
       def download(url)
@@ -20,12 +22,14 @@ module OneClick
         @downloads.size > 0
       end
 
-      def before(action, &block)
-        (@before_parts[action] ||= []) << block
+      def before(action, options = {}, &block)
+        collection = options[:persist] ? @persisted_before_parts : @before_parts
+        (collection[action] ||= []) << block
       end
 
-      def after(action, &block)
-        (@after_parts[action] ||= []) << block
+      def after(action, options = {}, &block)
+        collection = options[:persist] ? @persisted_after_parts : @after_parts
+        (collection[action] ||= []) << block
       end
 
       def before_parts(action)
@@ -34,6 +38,14 @@ module OneClick
 
       def after_parts(action)
         @after_parts[action]
+      end
+
+      def persisted_before_parts(action)
+        @persisted_before_parts[action]
+      end
+
+      def persisted_after_parts(action)
+        @persisted_after_parts[action]
       end
     end
   end

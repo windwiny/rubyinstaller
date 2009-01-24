@@ -45,6 +45,14 @@ describe OneClick::Package::Actions do
     end
   end
 
+  describe '#before(:persist => true)' do
+    it 'should collect persistable before parts for action' do
+      @it.persisted_before_parts(:install).should be_nil
+      @it.before(:install, :persist => true) { }
+      @it.persisted_before_parts(:install).should_not be_nil
+    end
+  end
+
   describe '#after' do
     it 'should collect after parts for action' do
       @it.after_parts(:download).should be_nil
@@ -62,6 +70,14 @@ describe OneClick::Package::Actions do
     it 'should allow collection of multiple parts for same action' do
       2.times { @it.after(:download) { } }
       @it.should have(2).after_parts(:download)
+    end
+  end
+
+  describe '#after(:persist => true)' do
+    it 'should collect persistable after parts for action' do
+      @it.persisted_after_parts(:install).should be_nil
+      @it.after(:install, :persist => true) { }
+      @it.persisted_after_parts(:install).should_not be_nil
     end
   end
 end
