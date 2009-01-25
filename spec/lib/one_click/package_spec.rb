@@ -132,7 +132,7 @@ describe OneClick::Package do
         Rake::Task['foo:4.5.6'].prerequisites.should_not include('foo:4.5.6:download')
       end
 
-      it 'should chain dependency when there are downloads' do
+      it 'should add download task as dependency when there are downloads' do
         @pkg.stub!(:define_download).and_return(true)
         @pkg.define
         Rake::Task['foo:4.5.6'].prerequisites.should include('foo:4.5.6:download')
@@ -149,7 +149,7 @@ describe OneClick::Package do
         Rake::Task['foo:4.5.6'].prerequisites.should_not include('foo:4.5.6:extract')
       end
 
-      it 'should chain dependency when there are things to extract' do
+      it 'should add extraction task when there are things to extract' do
         @pkg.stub!(:define_extract).and_return(true)
         @pkg.define
         Rake::Task['foo:4.5.6'].prerequisites.should include('foo:4.5.6:extract')
