@@ -105,17 +105,24 @@ module URI
     #
     # Use the progress bar when running in verbose mode.
     def download(target, options = {})
+      options[:tmp_dir] ||= Dir.tmpdir
+
       case target
       when String
         # If download breaks we end up with a partial file which is
         # worse than not having a file at all, so download to temporary
         # file and then move over.
         modified = File.stat(target).mtime if File.exist?(target)
+
+        # ensure temporary directory exists first
+        FileUtils.mkpath(options[:tmp_dir])
+
         temp = nil
-        Tempfile.open(File.basename(target)) do |temp|
+        Tempfile.open(File.basename(target), options[:tmp_dir]) do |temp|
           temp.binmode
           read(options.merge(:modified => modified)) { |chunk| temp.write chunk }
         end
+
         FileUtils.mkpath(File.dirname(target))
         FileUtils.move(temp.path, target)
       when File
