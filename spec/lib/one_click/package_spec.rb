@@ -1,5 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
+# DSL construction and Task definitions
 describe OneClick::Package do
   describe "#new" do
     it 'should fail if no name for the package was given' do
@@ -385,6 +386,42 @@ describe OneClick::Package do
       it 'should make checkpoint task part of the extraction one' do
         @pkg.define_extract
         Rake::Task['foo:4.5.6:extract'].prerequisites.should include(@checkpoint_file)
+      end
+    end
+  end
+end
+
+# Task executions
+describe OneClick::Package do
+  describe '(task execution)' do
+    before :each do
+      Rake.application.clear
+
+      OneClick.stub!(:sandbox_dir).and_return('sandbox')
+
+      @files = [{:file => 'foo-4.5.6.zip', :url => 'http://www.domain.com/foo-4.5.6.zip'}]
+      @mock_actions = mock(OneClick::Package::Actions, :has_downloads? => false)
+      @mock_actions.stub!(:before_parts => nil,
+                          :after_parts => nil,
+                          :persisted_before_parts => nil,
+                          :persisted_after_parts => nil)
+
+      @mock_actions.stub!(:has_downloads?).and_return(true)
+      @mock_actions.stub!(:downloads).and_return(@files)
+
+      OneClick::Package::Actions.stub!(:new).and_return(@mock_actions)
+
+      @pkg = OneClick::Package.new('foo', '4.5.6')
+    end
+
+    describe 'download' do
+      before :each do
+        @pkg.define_download
+      end
+
+      it 'should invoke file download actions' do
+        OneClick::Utils.should_receive(:download).with('http://www.domain.com/foo-4.5.6.zip', 'sandbox/foo/4.5.6').once
+        Rake::Task['foo:4.5.6:download'].invoke
       end
     end
   end

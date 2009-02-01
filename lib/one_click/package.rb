@@ -57,14 +57,13 @@ module OneClick
       # sandbox/package/version/before-download_checkpoint
       tasks << action_checkpoint(:before, :download)
 
-      # TODO: define download actions for checkpoint
+      # sandbox/package/version/download_checkpoint
       tasks << Rake::FileTask.define_task(download_checkpoint)
 
       @actions.downloads.each do |download|
-        # TODO: spec file task for coverage
-        Rake::FileTask.define_task("#{pkg_dir}/#{download[:file]}") #do |t|
-        #  OneClick::Utils.download(download[:url], pkg_dir)
-        #end
+        Rake::FileTask.define_task("#{pkg_dir}/#{download[:file]}") do |t|
+          OneClick::Utils.download(download[:url], pkg_dir)
+        end
 
         # sandbox/package/version/download_checkpoint => [sandbox/package/version/file]
         tasks.last.enhance(["#{pkg_dir}/#{download[:file]}"])
