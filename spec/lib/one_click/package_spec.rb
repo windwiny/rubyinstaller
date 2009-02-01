@@ -421,7 +421,7 @@ describe OneClick::Package do
 
       it 'should invoke file download actions' do
         OneClick::Utils.should_receive(:download).with('http://www.domain.com/foo-4.5.6.zip', 'sandbox/foo/4.5.6').once
-        Rake::Task['foo:4.5.6:download'].invoke
+        Rake::Task['sandbox/foo/4.5.6/foo-4.5.6.zip'].invoke
       end
     end
   end
