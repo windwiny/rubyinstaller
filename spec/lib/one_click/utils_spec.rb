@@ -35,4 +35,42 @@ describe OneClick::Utils do
                                 'sandbox/foo/4.5.6')
     end
   end
+
+  describe '#extract' do
+    before :each do
+      FileUtils.stub!(:mkpath)
+      Zip.stub!(:extract)
+    end
+
+    it 'should use RubyZip to decompress zip files' do
+      Zip.should_receive(:extract).
+        with('sandbox/foo/4.5.6/foo-4.5.6.zip', anything)
+
+      OneClick::Utils.extract('sandbox/foo/4.5.6/foo-4.5.6.zip',
+                              'sandbox/foo/4.5.6/source')
+    end
+
+    it 'should use RubyZip to decompress to the indicated destination' do
+      Zip.should_receive(:extract).
+        with(anything, 'tmp/something')
+
+      OneClick::Utils.extract('sandbox/foo/4.5.6/foo-4.5.6.zip',
+                              'tmp/something')
+    end
+
+    it 'should ensure destination path exists' do
+      FileUtils.should_receive(:mkpath).
+        with('sandbox/foo/4.5.6/source')
+
+      OneClick::Utils.extract('sandbox/foo/4.5.6/foo-4.5.6.zip',
+                              'sandbox/foo/4.5.6/source')
+    end
+
+    it 'should file to extract any other type of file' do
+      lambda {
+        OneClick::Utils.extract('sandbox/foo/4.5.6/foo-4.5.6.tar.bz2',
+                                'sandbox/foo/4.5.6/source')
+      }.should raise_error(OneClick::Utils::UnknownFormatError)
+    end
+  end
 end
