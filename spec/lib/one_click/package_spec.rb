@@ -400,15 +400,16 @@ describe OneClick::Package do
       # stub locations
       OneClick.stub!(:sandbox_dir).and_return('sandbox')
 
-      # stub action utilities
-      OneClick::Utils.stub!(:download)
-
       # before and after actions
       action = Proc.new { OneClick.fake }
       action_with_arg = Proc.new { |pkg| OneClick.fake(pkg) }
       OneClick.stub!(:fake)
 
-      @files = [{:file => 'foo-4.5.6.zip', :url => 'http://www.domain.com/foo-4.5.6.zip'}]
+      @files = [
+        {:file => 'foo-4.5.6.zip', :url => 'http://www.domain.com/foo-4.5.6.zip'},
+        {:file => 'foo_ext-4.5.6.zip', :url => 'http://www.domain.com/foo_ext-4.5.6.zip'}
+      ]
+
       @mock_actions = mock(OneClick::Package::Actions)
       @mock_actions.stub!(:before_parts => [action, action_with_arg],
                           :after_parts => [action, action_with_arg],
@@ -428,6 +429,8 @@ describe OneClick::Package do
     # download tasks
     describe 'download' do
       before :each do
+        OneClick::Utils.stub!(:download)
+
         @pkg.define_download
         @checkpoint_file = 'sandbox/foo/4.5.6/.checkpoint--download--generated-hex-digest'
       end
@@ -499,7 +502,7 @@ describe OneClick::Package do
           Rake::Task[@checkpoint].invoke
         end
 
-        it 'should execute the actions before download ordered' do
+        it 'should execute the actions before download, in order' do
           OneClick.should_receive(:fake).with(no_args).ordered
           OneClick.should_receive(:fake).with(@pkg).ordered
 
@@ -507,6 +510,110 @@ describe OneClick::Package do
         end
 
         it 'should generate before download checkpoint' do
+          OneClick.stub!(:fake)
+          FileUtils.should_receive(:touch).with(@checkpoint)
+
+          Rake::Task[@checkpoint].invoke
+        end
+      end
+    end
+
+    # extraction tasks
+    describe 'extract' do
+      before :each do
+        OneClick::Utils.stub!(:extract)
+
+        FileUtils.stub!(:touch)
+
+        @pkg.define_extract
+        @checkpoint_file = 'sandbox/foo/4.5.6/.checkpoint--extract--generated-hex-digest'
+
+        # fake file generation
+        Rake::FileTask.define_task('sandbox/foo/4.5.6/foo-4.5.6.zip')
+        Rake::FileTask.define_task('sandbox/foo/4.5.6/foo_ext-4.5.6.zip')
+      end
+
+      it 'should invoke file extraction task for each file' do
+        OneClick::Utils.should_receive(:extract).
+          with('sandbox/foo/4.5.6/foo-4.5.6.zip', 'sandbox/foo/4.5.6/source').
+          ordered
+
+        OneClick::Utils.should_receive(:extract).
+          with('sandbox/foo/4.5.6/foo_ext-4.5.6.zip', 'sandbox/foo/4.5.6/source').
+          ordered
+
+        Rake::Task[@checkpoint_file].invoke
+      end
+
+      it 'should generate the extraction checkpoint' do
+        FileUtils.should_receive(:touch).with(@checkpoint_file)
+
+        Rake::Task[@checkpoint_file].invoke
+      end
+
+      describe '(before)' do
+        before :each do
+          @checkpoint = 'sandbox/foo/4.5.6/.checkpoint--before-extract--generated-hex-digest'
+        end
+
+        it 'should execute actions before extract' do
+          OneClick.should_receive(:fake).twice
+
+          # clear prerequisites (workaround)
+          Rake::Task['foo:4.5.6:before-extract'].prerequisites.clear
+
+          Rake::Task['foo:4.5.6:before-extract'].invoke
+        end
+
+        it 'should execute persistent actions before extract' do
+          OneClick.should_receive(:fake).twice
+
+          Rake::Task[@checkpoint].invoke
+        end
+
+        it 'should execute the actions before extraction, in order' do
+          OneClick.should_receive(:fake).with(no_args).ordered
+          OneClick.should_receive(:fake).with(@pkg).ordered
+
+          Rake::Task[@checkpoint].invoke
+        end
+
+        it 'should generate before extract checkpoint' do
+          OneClick.stub!(:fake)
+          FileUtils.should_receive(:touch).with(@checkpoint)
+
+          Rake::Task[@checkpoint].invoke
+        end
+      end
+
+      describe '(after)' do
+        before :each do
+          @checkpoint = 'sandbox/foo/4.5.6/.checkpoint--after-extract--generated-hex-digest'
+        end
+
+        it 'should execute actions after extract' do
+          OneClick.should_receive(:fake).twice
+
+          # clear prerequisites (workaround)
+          Rake::Task['foo:4.5.6:after-extract'].prerequisites.clear
+
+          Rake::Task['foo:4.5.6:after-extract'].invoke
+        end
+
+        it 'should execute persistent actions after extract' do
+          OneClick.should_receive(:fake).twice
+
+          Rake::Task[@checkpoint].invoke
+        end
+
+        it 'should execute the actions after extraction, in order' do
+          OneClick.should_receive(:fake).with(no_args).ordered
+          OneClick.should_receive(:fake).with(@pkg).ordered
+
+          Rake::Task[@checkpoint].invoke
+        end
+
+        it 'should generate after extract checkpoint' do
           OneClick.stub!(:fake)
           FileUtils.should_receive(:touch).with(@checkpoint)
 

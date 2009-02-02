@@ -80,16 +80,33 @@ module OneClick
     def define_extract
       return unless @actions.has_downloads?
 
-      # TODO: define extraction actions for checkpoint
-      task = Rake::FileTask.define_task(extract_checkpoint)
+      # collect all defined tasks in order
+      tasks = []
+
+      # sandbox/package/version/before-extract_checkpoint
+      tasks << action_checkpoint(:before, :extract)
+
+      # sandbox/package/version/extract_checkpoint
+      tasks << Rake::FileTask.define_task(extract_checkpoint) do |t|
+        # Perform file extraction for each prerequisite
+        t.prerequisites.each do |f|
+          OneClick::Utils.extract(f, source_dir)
+        end
+
+        # generate checkpoint file
+        FileUtils.touch(t.name)
+      end
 
       @actions.downloads.each do |download|
         # sandbox/package/version/extract_checkpoint => [sandbox/package/version/file]
-        task.enhance(["#{pkg_dir}/#{download[:file]}"])
+        tasks.last.enhance(["#{pkg_dir}/#{download[:file]}"])
       end
 
+      # sandbox/package/version/after-download_checkpoint
+      tasks << action_checkpoint(:after, :extract)
+
       # package:version:extract => [sandbox/package/version/extract_checkpoint]
-      Rake::Task.define_task("#{@name}:#{@version}:extract" => [task])
+      Rake::Task.define_task("#{@name}:#{@version}:extract" => tasks.compact)
     end
 
     private
