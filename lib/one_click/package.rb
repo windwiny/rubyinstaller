@@ -58,7 +58,9 @@ module OneClick
       tasks << action_checkpoint(:before, :download)
 
       # sandbox/package/version/download_checkpoint
-      tasks << Rake::FileTask.define_task(download_checkpoint)
+      tasks << Rake::FileTask.define_task(download_checkpoint) do |t|
+         FileUtils.touch(t.name)
+      end
 
       @actions.downloads.each do |download|
         Rake::FileTask.define_task("#{pkg_dir}/#{download[:file]}") do |t|
@@ -100,17 +102,20 @@ module OneClick
     end
 
     def action_checkpoint(before_or_after, action)
-      if before_or_after == :before then
-        actions, persistent_actions = @actions.before_parts(action), @actions.persisted_before_parts(action)
-      elsif :after
-        actions, persistent_actions = @actions.after_parts(action), @actions.persisted_after_parts(action)
+      actions, persistent_actions = case before_or_after
+        when :before
+          [@actions.before_parts(action), @actions.persisted_before_parts(action)]
+        when :after
+          [@actions.after_parts(action), @actions.persisted_after_parts(action)]
       end
 
       # no actions? nothing for you then!
       return unless actions || persistent_actions
 
       # package:version:before_or_after-action
-      task = Rake::Task.define_task("#{@name}:#{@version}:#{before_or_after}-#{action}")
+      task = Rake::Task.define_task("#{@name}:#{@version}:#{before_or_after}-#{action}") do
+        actions.each { |a| a.call(self) }
+      end
 
       # define action checkpoint for persistent tasks
       if persistent_actions then
@@ -118,8 +123,10 @@ module OneClick
         sha1 = Digest::SHA1.hexdigest([@name, @version, "#{before_or_after}-#{action}", persistent_actions.size].join("\n"))
 
         # sandbox/package/version/before_or_after_checkpoint
-        # TODO: add execution and coverage for parts (blocks)
-        checkpoint = Rake::FileTask.define_task(checkpoint_file("#{before_or_after}-#{action}", sha1))
+        checkpoint = Rake::FileTask.define_task(checkpoint_file("#{before_or_after}-#{action}", sha1)) do |t|
+          persistent_actions.each { |pa| pa.call(self) }
+          FileUtils.touch(t.name)
+        end
 
         # chain the checkpoint to the action task
         # package:version:before_or_after-action => [sandbox/package/version/before_or_after-action-checkpoint]

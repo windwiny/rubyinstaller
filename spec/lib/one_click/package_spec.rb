@@ -397,31 +397,121 @@ describe OneClick::Package do
     before :each do
       Rake.application.clear
 
+      # stub locations
       OneClick.stub!(:sandbox_dir).and_return('sandbox')
 
+      # stub action utilities
+      OneClick::Utils.stub!(:download)
+
+      # before and after actions
+      action = Proc.new { OneClick.fake }
+      action_with_arg = Proc.new { |pkg| OneClick.fake(pkg) }
+      OneClick.stub!(:fake)
+
       @files = [{:file => 'foo-4.5.6.zip', :url => 'http://www.domain.com/foo-4.5.6.zip'}]
-      @mock_actions = mock(OneClick::Package::Actions, :has_downloads? => false)
-      @mock_actions.stub!(:before_parts => nil,
-                          :after_parts => nil,
-                          :persisted_before_parts => nil,
-                          :persisted_after_parts => nil)
+      @mock_actions = mock(OneClick::Package::Actions)
+      @mock_actions.stub!(:before_parts => [action, action_with_arg],
+                          :after_parts => [action, action_with_arg],
+                          :persisted_before_parts => [action, action_with_arg],
+                          :persisted_after_parts => [action, action_with_arg])
 
       @mock_actions.stub!(:has_downloads?).and_return(true)
       @mock_actions.stub!(:downloads).and_return(@files)
 
       OneClick::Package::Actions.stub!(:new).and_return(@mock_actions)
 
+      Digest::SHA1.stub!(:hexdigest).and_return('generated-hex-digest')
+
       @pkg = OneClick::Package.new('foo', '4.5.6')
     end
 
+    # download tasks
     describe 'download' do
       before :each do
         @pkg.define_download
+        @checkpoint_file = 'sandbox/foo/4.5.6/.checkpoint--download--generated-hex-digest'
       end
 
       it 'should invoke file download actions' do
         OneClick::Utils.should_receive(:download).with('http://www.domain.com/foo-4.5.6.zip', 'sandbox/foo/4.5.6').once
         Rake::Task['sandbox/foo/4.5.6/foo-4.5.6.zip'].invoke
+      end
+
+      it 'should generate the download checkpoint' do
+        FileUtils.should_receive(:touch).with(@checkpoint_file)
+        Rake::Task[@checkpoint_file].invoke
+      end
+
+      describe '(before)' do
+        before :each do
+          FileUtils.stub!(:touch)
+          @checkpoint = 'sandbox/foo/4.5.6/.checkpoint--before-download--generated-hex-digest'
+        end
+
+        it 'should execute actions before download' do
+          OneClick.should_receive(:fake).twice
+
+          # clear prerequisites (workaround)
+          Rake::Task['foo:4.5.6:before-download'].prerequisites.clear
+
+          Rake::Task['foo:4.5.6:before-download'].invoke
+        end
+
+        it 'should execute persistent actions before download' do
+          OneClick.should_receive(:fake).twice
+
+          Rake::Task[@checkpoint].invoke
+        end
+
+        it 'should execute the actions before download ordered' do
+          OneClick.should_receive(:fake).with(no_args).ordered
+          OneClick.should_receive(:fake).with(@pkg).ordered
+
+          Rake::Task[@checkpoint].invoke
+        end
+
+        it 'should generate before download checkpoint' do
+          OneClick.stub!(:fake)
+          FileUtils.should_receive(:touch).with(@checkpoint)
+
+          Rake::Task[@checkpoint].invoke
+        end
+      end
+
+      describe '(after)' do
+        before :each do
+          FileUtils.stub!(:touch)
+          @checkpoint = 'sandbox/foo/4.5.6/.checkpoint--after-download--generated-hex-digest'
+        end
+
+        it 'should execute actions before download' do
+          OneClick.should_receive(:fake).twice
+
+          # clear prerequisites (workaround)
+          Rake::Task['foo:4.5.6:after-download'].prerequisites.clear
+
+          Rake::Task['foo:4.5.6:after-download'].invoke
+        end
+
+        it 'should execute persistent actions before download' do
+          OneClick.should_receive(:fake).twice
+
+          Rake::Task[@checkpoint].invoke
+        end
+
+        it 'should execute the actions before download ordered' do
+          OneClick.should_receive(:fake).with(no_args).ordered
+          OneClick.should_receive(:fake).with(@pkg).ordered
+
+          Rake::Task[@checkpoint].invoke
+        end
+
+        it 'should generate before download checkpoint' do
+          OneClick.stub!(:fake)
+          FileUtils.should_receive(:touch).with(@checkpoint)
+
+          Rake::Task[@checkpoint].invoke
+        end
       end
     end
   end
