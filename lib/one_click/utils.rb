@@ -28,7 +28,7 @@ module OneClick
           # use RubyZip to extract file contents
           Zip.extract(file, destination)
         else
-          raise UnknownFormatError.new("Unsupported file format for #{$1}")
+          raise UnknownFormatError.new("Unsupported file format for #{file}")
       end
     end
   end
