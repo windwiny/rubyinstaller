@@ -130,8 +130,12 @@ module OneClick
       return unless actions || persistent_actions
 
       # package:version:before_or_after-action
-      task = Rake::Task.define_task("#{@name}:#{@version}:#{before_or_after}-#{action}") do
-        actions.each { |a| a.call(self) }
+      task = Rake::Task.define_task("#{@name}:#{@version}:#{before_or_after}-#{action}")
+
+      if actions then
+        task.enhance do |t|
+          actions.each { |a| a.call(self) }
+        end
       end
 
       # define action checkpoint for persistent tasks

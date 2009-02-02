@@ -431,16 +431,19 @@ describe OneClick::Package do
       before :each do
         OneClick::Utils.stub!(:download)
 
-        @pkg.define_download
         @checkpoint_file = 'sandbox/foo/4.5.6/.checkpoint--download--generated-hex-digest'
       end
 
       it 'should invoke file download actions' do
+        @pkg.define_download
+
         OneClick::Utils.should_receive(:download).with('http://www.domain.com/foo-4.5.6.zip', 'sandbox/foo/4.5.6').once
         Rake::Task['sandbox/foo/4.5.6/foo-4.5.6.zip'].invoke
       end
 
       it 'should generate the download checkpoint' do
+        @pkg.define_download
+
         FileUtils.should_receive(:touch).with(@checkpoint_file)
         Rake::Task[@checkpoint_file].invoke
       end
@@ -452,6 +455,8 @@ describe OneClick::Package do
         end
 
         it 'should execute actions before download' do
+          @pkg.define_download
+
           OneClick.should_receive(:fake).twice
 
           # clear prerequisites (workaround)
@@ -460,13 +465,26 @@ describe OneClick::Package do
           Rake::Task['foo:4.5.6:before-download'].invoke
         end
 
+        it 'should only execute defined actions' do
+          @mock_actions.stub!(:before_parts)
+          @pkg.define_download
+
+          OneClick.should_receive(:fake).twice
+
+          Rake::Task['foo:4.5.6:before-download'].invoke
+        end
+
         it 'should execute persistent actions before download' do
+          @pkg.define_download
+
           OneClick.should_receive(:fake).twice
 
           Rake::Task[@checkpoint].invoke
         end
 
         it 'should execute the actions before download ordered' do
+          @pkg.define_download
+
           OneClick.should_receive(:fake).with(no_args).ordered
           OneClick.should_receive(:fake).with(@pkg).ordered
 
@@ -474,6 +492,8 @@ describe OneClick::Package do
         end
 
         it 'should generate before download checkpoint' do
+          @pkg.define_download
+
           OneClick.stub!(:fake)
           FileUtils.should_receive(:touch).with(@checkpoint)
 
@@ -488,6 +508,8 @@ describe OneClick::Package do
         end
 
         it 'should execute actions before download' do
+          @pkg.define_download
+
           OneClick.should_receive(:fake).twice
 
           # clear prerequisites (workaround)
@@ -497,12 +519,16 @@ describe OneClick::Package do
         end
 
         it 'should execute persistent actions before download' do
+          @pkg.define_download
+
           OneClick.should_receive(:fake).twice
 
           Rake::Task[@checkpoint].invoke
         end
 
         it 'should execute the actions before download, in order' do
+          @pkg.define_download
+
           OneClick.should_receive(:fake).with(no_args).ordered
           OneClick.should_receive(:fake).with(@pkg).ordered
 
@@ -510,6 +536,8 @@ describe OneClick::Package do
         end
 
         it 'should generate before download checkpoint' do
+          @pkg.define_download
+
           OneClick.stub!(:fake)
           FileUtils.should_receive(:touch).with(@checkpoint)
 
@@ -525,7 +553,6 @@ describe OneClick::Package do
 
         FileUtils.stub!(:touch)
 
-        @pkg.define_extract
         @checkpoint_file = 'sandbox/foo/4.5.6/.checkpoint--extract--generated-hex-digest'
 
         # fake file generation
@@ -534,6 +561,8 @@ describe OneClick::Package do
       end
 
       it 'should invoke file extraction task for each file' do
+        @pkg.define_extract
+
         OneClick::Utils.should_receive(:extract).
           with('sandbox/foo/4.5.6/foo-4.5.6.zip', 'sandbox/foo/4.5.6/source').
           ordered
@@ -546,6 +575,8 @@ describe OneClick::Package do
       end
 
       it 'should generate the extraction checkpoint' do
+        @pkg.define_extract
+
         FileUtils.should_receive(:touch).with(@checkpoint_file)
 
         Rake::Task[@checkpoint_file].invoke
@@ -557,6 +588,8 @@ describe OneClick::Package do
         end
 
         it 'should execute actions before extract' do
+          @pkg.define_extract
+
           OneClick.should_receive(:fake).twice
 
           # clear prerequisites (workaround)
@@ -566,12 +599,16 @@ describe OneClick::Package do
         end
 
         it 'should execute persistent actions before extract' do
+          @pkg.define_extract
+
           OneClick.should_receive(:fake).twice
 
           Rake::Task[@checkpoint].invoke
         end
 
         it 'should execute the actions before extraction, in order' do
+          @pkg.define_extract
+
           OneClick.should_receive(:fake).with(no_args).ordered
           OneClick.should_receive(:fake).with(@pkg).ordered
 
@@ -579,6 +616,8 @@ describe OneClick::Package do
         end
 
         it 'should generate before extract checkpoint' do
+          @pkg.define_extract
+
           OneClick.stub!(:fake)
           FileUtils.should_receive(:touch).with(@checkpoint)
 
@@ -592,6 +631,8 @@ describe OneClick::Package do
         end
 
         it 'should execute actions after extract' do
+          @pkg.define_extract
+
           OneClick.should_receive(:fake).twice
 
           # clear prerequisites (workaround)
@@ -600,13 +641,26 @@ describe OneClick::Package do
           Rake::Task['foo:4.5.6:after-extract'].invoke
         end
 
+        it 'should only execute defined actions' do
+          @mock_actions.stub!(:after_parts)
+          @pkg.define_extract
+
+          OneClick.should_receive(:fake).twice
+
+          Rake::Task['foo:4.5.6:after-extract'].invoke
+        end
+
         it 'should execute persistent actions after extract' do
+          @pkg.define_extract
+
           OneClick.should_receive(:fake).twice
 
           Rake::Task[@checkpoint].invoke
         end
 
         it 'should execute the actions after extraction, in order' do
+          @pkg.define_extract
+
           OneClick.should_receive(:fake).with(no_args).ordered
           OneClick.should_receive(:fake).with(@pkg).ordered
 
@@ -614,6 +668,8 @@ describe OneClick::Package do
         end
 
         it 'should generate after extract checkpoint' do
+          @pkg.define_extract
+
           OneClick.stub!(:fake)
           FileUtils.should_receive(:touch).with(@checkpoint)
 
