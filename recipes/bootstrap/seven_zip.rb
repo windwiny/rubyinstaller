@@ -21,10 +21,12 @@ module SevenZip
         tar_file = File.join(tmpdir, File.basename($1))
         seven_zip file, tmpdir
         seven_zip tar_file, destination
+        FileUtils.rm(tar_file)
       when /(^.+)\.tgz$/
         tar_file = File.join(tmpdir, "#{File.basename($1)}.tar")
         seven_zip file, tmpdir
         seven_zip tar_file, destination
+        FileUtils.rm(tar_file)
       when /(^.+\.zip$)/
         seven_zip file, destination
       else
