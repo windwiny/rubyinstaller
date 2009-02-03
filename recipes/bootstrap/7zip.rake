@@ -1,6 +1,14 @@
-# load SevenZip module.
-# it replaces built-in RubyZip with a solution that can handle several 
-# formats besides .zip
+#
+# 7zip Recipe
+#
+
+# To avoid dependency on advanced extraction tools, this recipe grabs
+# 7zip binaries for Windows and replace the built-in extract mechanism 
+# to allow unpacking of other formats beyond Zip files.
+
+# SevenZip module contains the methods that replace buit-in functionality
+# moved into it's own file for readability.
+
 require File.join(File.dirname(__FILE__), 'seven_zip')
 
 OneClick::Package.new('7zip', '4.64') do
