@@ -429,6 +429,9 @@ describe OneClick::Package do
     # download tasks
     describe 'download' do
       before :each do
+        FileUtils.stub!(:touch)
+        FileUtils.stub!(:rm)
+
         OneClick::Utils.stub!(:download)
 
         @checkpoint_file = 'sandbox/foo/4.5.6/.checkpoint--download--generated-hex-digest'
@@ -448,9 +451,17 @@ describe OneClick::Package do
         Rake::Task[@checkpoint_file].invoke
       end
 
+      it 'should remove obsolete checkpoint files' do
+        wildcard = @checkpoint_file.sub('generated-hex-digest', '*')
+
+        @pkg.define_download
+
+        FileUtils.should_receive(:rm).with(wildcard)
+        Rake::Task[@checkpoint_file].invoke
+      end
+
       describe '(before)' do
         before :each do
-          FileUtils.stub!(:touch)
           @checkpoint = 'sandbox/foo/4.5.6/.checkpoint--before-download--generated-hex-digest'
         end
 
@@ -497,6 +508,15 @@ describe OneClick::Package do
           OneClick.stub!(:fake)
           FileUtils.should_receive(:touch).with(@checkpoint)
 
+          Rake::Task[@checkpoint].invoke
+        end
+
+        it 'should remove obsolete checkpoint files' do
+          wildcard = @checkpoint.sub('generated-hex-digest', '*')
+
+          @pkg.define_download
+
+          FileUtils.should_receive(:rm).with(wildcard)
           Rake::Task[@checkpoint].invoke
         end
       end
@@ -552,6 +572,7 @@ describe OneClick::Package do
         OneClick::Utils.stub!(:extract)
 
         FileUtils.stub!(:touch)
+        FileUtils.stub!(:rm)
 
         @checkpoint_file = 'sandbox/foo/4.5.6/.checkpoint--extract--generated-hex-digest'
 
@@ -578,6 +599,16 @@ describe OneClick::Package do
         @pkg.define_extract
 
         FileUtils.should_receive(:touch).with(@checkpoint_file)
+
+        Rake::Task[@checkpoint_file].invoke
+      end
+
+      it 'should remove any previous checkpoint file' do
+        wildcard = @checkpoint_file.sub('generated-hex-digest', '*')
+
+        @pkg.define_extract
+
+        FileUtils.should_receive(:rm).with(wildcard)
 
         Rake::Task[@checkpoint_file].invoke
       end

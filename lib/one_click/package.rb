@@ -59,7 +59,11 @@ module OneClick
 
       # sandbox/package/version/download_checkpoint
       tasks << Rake::FileTask.define_task(download_checkpoint) do |t|
-         FileUtils.touch(t.name)
+        # remove older checkpoints
+        FileUtils.rm(checkpoint_file(:download, '*'))
+
+        # generate new checkpoint
+        FileUtils.touch(t.name)
       end
 
       @actions.downloads.each do |download|
@@ -88,6 +92,9 @@ module OneClick
 
       # sandbox/package/version/extract_checkpoint
       tasks << Rake::FileTask.define_task(extract_checkpoint) do |t|
+        # remove older checkpoints
+        FileUtils.rm(checkpoint_file(:extract, '*'))
+
         # Perform file extraction for each prerequisite
         t.prerequisites.each do |f|
           OneClick::Utils.extract(f, source_dir)
@@ -145,6 +152,7 @@ module OneClick
 
         # sandbox/package/version/before_or_after_checkpoint
         checkpoint = Rake::FileTask.define_task(checkpoint_file("#{before_or_after}-#{action}", sha1)) do |t|
+          FileUtils.rm(t.name.sub(sha1, '*'))
           persistent_actions.each { |pa| pa.call(self) }
           FileUtils.touch(t.name)
         end
