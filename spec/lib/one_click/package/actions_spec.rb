@@ -80,4 +80,30 @@ describe OneClick::Package::Actions do
       @it.persisted_after_parts(:install).should_not be_nil
     end
   end
+
+  describe '#depends_on' do
+    it 'should not contain any dependency when initialized' do
+      @it.should_not have_dependencies
+    end
+
+    it 'should allow collection of dependencies' do
+      @it.should have(0).dependencies
+      @it.depends_on 'foo'
+      @it.depends_on 'bar'
+      @it.should have(2).dependencies
+    end
+
+    it 'should only allow one dependency to be added' do
+      @it.depends_on 'foo'
+      @it.depends_on 'foo'
+      @it.should have(1).dependencies
+    end
+
+    it 'should keep dependencies in the specified order' do
+      @it.depends_on 'foo'
+      @it.depends_on 'bar'
+      @it.dependencies.first.should == 'foo'
+      @it.dependencies.last.should == 'bar'
+    end
+  end
 end

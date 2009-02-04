@@ -40,7 +40,8 @@ describe OneClick::Package do
 
   describe '#actions' do
     before :each do
-      @mock_actions = mock(OneClick::Package::Actions, :has_downloads? => false)
+      @mock_actions = mock(OneClick::Package::Actions)
+      @mock_actions.stub!(:has_downloads? => false, :has_dependencies? => false)
       OneClick::Package::Actions.stub!(:new).and_return(@mock_actions)
     end
 
@@ -108,7 +109,8 @@ describe OneClick::Package do
       @mock_actions.stub!(:before_parts => nil,
                           :after_parts => nil,
                           :persisted_before_parts => nil,
-                          :persisted_after_parts => nil)
+                          :persisted_after_parts => nil,
+                          :has_dependencies? => false)
 
       OneClick::Package::Actions.stub!(:new).and_return(@mock_actions)
 
@@ -154,6 +156,18 @@ describe OneClick::Package do
         @pkg.stub!(:define_extract).and_return(true)
         @pkg.define
         Rake::Task['foo:4.5.6'].prerequisites.should include('foo:4.5.6:extract')
+      end
+
+      describe '(dependencies)' do
+        before :each do
+          @mock_actions.stub!(:dependencies => ['bar', 'baz'])
+          @mock_actions.stub!(:has_dependencies?).and_return(true)
+        end
+
+        it 'should add dependencies first in the dependency chain' do
+          @pkg.define
+          Rake::Task['foo:4.5.6'].prerequisites.should include('bar', 'baz')
+        end
       end
     end
 
@@ -454,7 +468,7 @@ describe OneClick::Package do
       it 'should remove obsolete checkpoint files' do
         @pkg.define_download
 
-        FileUtils.should_receive(:rm).with(/--download--/)
+        FileUtils.should_receive(:rm).once
         Rake::Task[@checkpoint_file].invoke
       end
 
@@ -512,7 +526,7 @@ describe OneClick::Package do
         it 'should remove obsolete checkpoint files' do
           @pkg.define_download
 
-          FileUtils.should_receive(:rm).with(/--before-download--/)
+          FileUtils.should_receive(:rm).once
           Rake::Task[@checkpoint].invoke
         end
       end
@@ -601,7 +615,7 @@ describe OneClick::Package do
       it 'should remove any previous checkpoint file' do
         @pkg.define_extract
 
-        FileUtils.should_receive(:rm).with(/--extract--/)
+        FileUtils.should_receive(:rm).once
 
         Rake::Task[@checkpoint_file].invoke
       end

@@ -34,9 +34,13 @@ module OneClick
       fail 'package version is required' if @version.nil?
 
       # package:version
-      Rake::Task.define_task("#{@name}:#{@version}")
-      Rake::Task["#{@name}:#{@version}"].comment = "Build #{@name} version #{@version}"
+      pkg = Rake::Task.define_task("#{@name}:#{@version}")
+      pkg.comment = "Build #{@name} version #{@version}"
 
+      # add dependencies
+      pkg.enhance(@actions.dependencies) if @actions.has_dependencies?
+
+      # package actions
       chained_actions = []
       chained_actions << :download if define_download
       chained_actions << :extract if define_extract
@@ -45,7 +49,7 @@ module OneClick
       chained_actions.map! { |action| "#{@name}:#{@version}:#{action}" }
 
       # package:version => [package:version:...]
-      Rake::Task["#{@name}:#{@version}"].enhance(chained_actions)
+      pkg.enhance(chained_actions)
     end
 
     def define_download

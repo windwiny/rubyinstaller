@@ -4,9 +4,11 @@ module OneClick
       autoload :URI, 'uri'
 
       attr_reader :downloads
+      attr_reader :dependencies
 
       def initialize
         @downloads = []
+        @dependencies = []
         @before_parts = {}
         @after_parts = {}
         @persisted_before_parts = {}
@@ -19,7 +21,15 @@ module OneClick
       end
 
       def has_downloads?
-        @downloads.size > 0
+        !@downloads.empty?
+      end
+
+      def depends_on(dep)
+        @dependencies << dep unless @dependencies.include?(dep)
+      end
+
+      def has_dependencies?
+        !@dependencies.empty?
       end
 
       def before(action, options = {}, &block)
