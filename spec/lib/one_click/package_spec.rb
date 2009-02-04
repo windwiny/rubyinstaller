@@ -452,11 +452,9 @@ describe OneClick::Package do
       end
 
       it 'should remove obsolete checkpoint files' do
-        wildcard = @checkpoint_file.sub('generated-hex-digest', '*')
-
         @pkg.define_download
 
-        FileUtils.should_receive(:rm).with(wildcard)
+        FileUtils.should_receive(:rm).with(/--download--/)
         Rake::Task[@checkpoint_file].invoke
       end
 
@@ -512,18 +510,15 @@ describe OneClick::Package do
         end
 
         it 'should remove obsolete checkpoint files' do
-          wildcard = @checkpoint.sub('generated-hex-digest', '*')
-
           @pkg.define_download
 
-          FileUtils.should_receive(:rm).with(wildcard)
+          FileUtils.should_receive(:rm).with(/--before-download--/)
           Rake::Task[@checkpoint].invoke
         end
       end
 
       describe '(after)' do
         before :each do
-          FileUtils.stub!(:touch)
           @checkpoint = 'sandbox/foo/4.5.6/.checkpoint--after-download--generated-hex-digest'
         end
 
@@ -604,11 +599,9 @@ describe OneClick::Package do
       end
 
       it 'should remove any previous checkpoint file' do
-        wildcard = @checkpoint_file.sub('generated-hex-digest', '*')
-
         @pkg.define_extract
 
-        FileUtils.should_receive(:rm).with(wildcard)
+        FileUtils.should_receive(:rm).with(/--extract--/)
 
         Rake::Task[@checkpoint_file].invoke
       end
