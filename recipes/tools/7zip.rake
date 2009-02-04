@@ -26,3 +26,6 @@ OneClick::Package.new('7zip', '4.64') do
     end
   end
 end
+
+# make '7zip' default to the version defined above
+task '7zip' => ['7zip:4.64']
