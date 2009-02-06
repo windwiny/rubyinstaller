@@ -47,8 +47,7 @@ module SevenZip
     # <archive_name>
     args << file
 
-    cmd = "#{@@executable} #{args.join(' ')}"
-    puts cmd
-    output = `#{cmd}`
+    puts "7za #{args.join(' ')}"
+    output = `#{@@executable} #{args.join(' ')}`
   end
 end
