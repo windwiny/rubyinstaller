@@ -21,16 +21,37 @@ module SevenZip
         tar_file = File.join(tmpdir, File.basename($1))
         seven_zip file, tmpdir
         seven_zip tar_file, destination
-        FileUtils.rm(tar_file)
+        FileUtils.rm tar_file
       when /(^.+)\.tgz$/
         tar_file = File.join(tmpdir, "#{File.basename($1)}.tar")
         seven_zip file, tmpdir
         seven_zip tar_file, destination
-        FileUtils.rm(tar_file)
+        FileUtils.rm tar_file
       when /(^.+\.zip$)/
         seven_zip file, destination
       else
         raise UnknownFormatError.new("Unsupported file format for #{file}")
+    end
+
+    # Relocate extracted contents if those are inside a versioned folder
+    # (msys and ruby packages suffer from this, ruby-1.8.6-p287)
+    Dir.glob("#{destination}/*").each do |dir|
+      next unless File.directory?(dir) and File.basename(dir) =~ /.*-\d+.*/i
+
+      # ensure relocate normal and dot files
+      Dir.glob("#{dir}/**/{*,.*}").each do |entry|
+        target = entry.sub(dir, destination)
+
+        # ensure path exists
+        File.mkpath File.dirname(target)
+
+        # do not try to relocate directories
+        next if File.directory?(entry)
+        FileUtils.mv entry, target
+      end
+
+      # Remove empty folder
+      FileUtils.rm_rf dir
     end
   end
 
