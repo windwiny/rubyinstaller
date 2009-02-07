@@ -71,12 +71,12 @@ module OneClick
       end
 
       @actions.downloads.each do |download|
-        Rake::FileTask.define_task("#{pkg_dir}/#{download[:file]}") do |t|
+        file = Rake::FileTask.define_task("#{pkg_dir}/#{download[:file]}") do |t|
           OneClick::Utils.download(download[:url], pkg_dir)
         end
 
         # sandbox/package/version/download_checkpoint => [sandbox/package/version/file]
-        tasks.last.enhance(["#{pkg_dir}/#{download[:file]}"])
+        tasks.last.enhance([file.name])
       end
 
       # sandbox/package/version/after-download_checkpoint
