@@ -1,4 +1,5 @@
 require 'rake'
+require 'ostruct'
 
 module OneClick
   autoload :Package, 'one_click/package'
@@ -14,5 +15,9 @@ module OneClick
 
   def self.tmp_dir
     @tmp_dir ||= 'tmp'
+  end
+
+  def self.options
+    @options ||= OpenStruct.new
   end
 end

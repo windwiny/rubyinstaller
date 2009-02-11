@@ -19,4 +19,12 @@ describe OneClick do
       OneClick.tmp_dir.should == 'tmp'
     end
   end
+
+  describe '#options' do
+    it 'should allow the exchange of information' do
+      OneClick.options.something.should be_nil
+      OneClick.options.something = 'foo-bar'
+      OneClick.options.something.should == 'foo-bar'
+    end
+  end
 end
