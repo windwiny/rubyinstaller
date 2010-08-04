@@ -29,3 +29,6 @@ Name: en; MessagesFile: compiler:Default.isl
 
 [Files]
 Source: ..\..\{#DevKitPath}\*; DestDir: {app}; Flags: recursesubdirs createallsubdirs
+
+[Code]
+#include "dk_gui.iss"
