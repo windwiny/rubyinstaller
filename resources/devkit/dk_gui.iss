@@ -75,7 +75,6 @@ end;
 procedure CurPageChanged(CurPageID: Integer);
 begin
   case CurPageID of
-    wpSelectDir: WizardForm.NextButton.Caption := '&Install';
-    RubiesPageID: WizardForm.NextButton.Caption := '&Install';
+    wpSelectDir, RubiesPageID: WizardForm.NextButton.Caption := '&Install';
   end;
 end;
