@@ -1,0 +1,10 @@
+# %2 override 'gem install' to enable RubyInstaller DevKit usage
+Gem.pre_install do |gem_installer|
+  unless gem_installer.spec.extensions.empty?
+    unless ENV['PATH'].include?('%1\\mingw\\bin') then
+      puts 'Temporarily enhancing PATH to include DevKit...'
+      ENV['PATH'] = '%1\\bin;%1\\mingw\\bin;' + ENV['PATH']
+    end
+  end
+end
+# %2

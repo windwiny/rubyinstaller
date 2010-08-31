@@ -1,0 +1,5 @@
+@ECHO OFF
+SETLOCAL
+SET DEVKIT=%1
+SET PATH=%DEVKIT%\bin;%DEVKIT%\mingw\bin;%PATH%
+%2.exe %%*
