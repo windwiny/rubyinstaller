@@ -8,7 +8,7 @@
 ;
 
 #include "dk_config.iss"
- 
+
 [Setup]
 PrivilegesRequired=lowest
 
@@ -30,7 +30,7 @@ Name: en; MessagesFile: compiler:Default.isl
 [Files]
 ;Source: ..\..\{#DevKitPath}\*; DestDir: {app}; Flags: recursesubdirs createallsubdirs
 Source: batch_stub.tmpl; Flags: dontcopy
-Source: gem_override.tmpl; Flags: dontcopy 
+Source: gem_override.tmpl; Flags: dontcopy
 
 [Code]
 //#include "path_utils.iss"
