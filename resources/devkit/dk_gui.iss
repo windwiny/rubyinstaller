@@ -79,8 +79,6 @@ end;
 
 { GUI event handlers }
 procedure DkChkBox_OnClick(Sender: TObject);
-var
-  Form: TForm;
 begin
   if (Sender as TNewCheckBox).Checked then begin
     WizardForm.NextButton.Caption := '&Next >';
