@@ -82,13 +82,18 @@ end
 # and if not, add %ProgramFiles%\Inno Setup 5
 task :innosetup do
   unless InnoSetup.present?
-    # if not found, add InnoSetup to the PATH
-    path = File.join(ENV['ProgramFiles'], 'Inno Setup 5')
-    path.gsub!(File::SEPARATOR, File::ALT_SEPARATOR)
-    ENV['PATH'] = "#{ENV['PATH']}#{File::PATH_SEPARATOR}#{path}"
-  end
+    original_path = ENV["PATH"]
 
-  fail "You need InnoSetup installed" unless InnoSetup.present?
+    result = ["ProgramFiles", "ProgramFiles(x86)"].find { |key|
+      path = File.join(ENV[key], "Inno Setup 5")
+      path.gsub!(File::SEPARATOR, File::ALT_SEPARATOR)
+      ENV['PATH'] = [original_path, path].join(File::PATH_SEPARATOR)
+
+      InnoSetup.present?
+    }
+
+    fail "You need InnoSetup installed" unless result
+  end
 end
 
 # Certificate signing tool (signtool.exe) check
