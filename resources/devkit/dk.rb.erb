@@ -8,8 +8,14 @@ module DevKitInstaller
   DEVKIT_START = ':DK-BEG:'
   DEVKIT_END = ':DK-END:'
 
+  HIVE_KEYS = [
+    Win32::Registry::HKEY_LOCAL_MACHINE,
+    Win32::Registry::HKEY_CURRENT_USER
+  ]
+
   REG_KEYS = [
-    'Software\RubyInstaller\MRI'
+    'Software\RubyInstaller\MRI',
+    'Software\Wow6432Node\RubyInstaller\MRI'
   ]
 
   CONFIG_FILE = 'config.yml'
@@ -108,7 +114,7 @@ EOT
 
   def self.scan_for(key)
     ris = []
-    [Win32::Registry::HKEY_LOCAL_MACHINE, Win32::Registry::HKEY_CURRENT_USER].each do |hive|
+    HIVE_KEYS.each do |hive|
       begin
         hive.open(key) do |ri_key|
           ri_key.each_key do |skey, wtime|
