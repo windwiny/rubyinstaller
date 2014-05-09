@@ -54,7 +54,7 @@ module RubyInstaller
     end
 
     Ruby19 = OpenStruct.new(
-      :version => "1.9.3-p484",
+      :version => "1.9.3-p545",
       :short_version => 'ruby19',
       :url => "http://cache.ruby-lang.org/pub/ruby/1.9",
       :checkout => 'http://svn.ruby-lang.org/repos/ruby/branches/ruby_1_9_3',
@@ -71,7 +71,7 @@ module RubyInstaller
         "CPPFLAGS='-DFD_SETSIZE=2048'"
       ],
       :files => [
-        "ruby-1.9.3-p484.tar.bz2"
+        "ruby-1.9.3-p545.tar.bz2"
       ],
       :dependencies => [
         :ffi, :gdbm, :iconv, :openssl, :pdcurses, :yaml, :zlib, :tcl, :tk
@@ -84,7 +84,7 @@ module RubyInstaller
     )
 
     Ruby20 = OpenStruct.new(
-      :version => "2.0.0-p353",
+      :version => "2.0.0-p451",
       :short_version => 'ruby20',
       :url => "http://cache.ruby-lang.org/pub/ruby/2.0",
       :checkout => "http://svn.ruby-lang.org/repos/ruby/ruby_2_0_0",
@@ -101,7 +101,7 @@ module RubyInstaller
         "CPPFLAGS='-DFD_SETSIZE=2048'"
       ],
       :files => [
-        "ruby-2.0.0-p353.tar.bz2"
+        "ruby-2.0.0-p451.tar.bz2"
       ],
       :dependencies => [
         :ffi, :gdbm, :iconv, :openssl, :pdcurses, :yaml, :zlib, :tcl, :tk
